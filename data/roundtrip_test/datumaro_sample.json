@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "id": "T-ROUNDTRIP-01",
+      "annotations": [
+        {
+          "id": 1,
+          "type": "cuboid_3d",
+          "label_id": 0,
+          "position": [
+            10.0,
+            5.0,
+            1.5
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            1.5707963267948966
+          ],
+          "scale": [
+            2.2,
+            4.8,
+            1.7
+          ]
+        }
+      ]
+    }
+  ]
+}

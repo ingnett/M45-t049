@@ -1,0 +1,43 @@
+================================================================================
+HƯỚNG DẪN DÁN NHÃN 3D CUBOID TRÊN CVAT (CHO RATER R1, R2, R3)
+Dự án: M45 - LiDAR Point Density & Annotation Difficulty Analyzer
+================================================================================
+
+1. NGUYÊN TẮC BẢO MẬT & ĐỘC LẬP (BẮT BUỘC):
+   - Bạn chỉ nhận được danh sách mã nhiệm vụ (task_code) và lớp đối tượng (class).
+   - Bạn KHÔNG được biết trước tọa độ hộp gốc, số điểm LiDAR (N), hay kết quả của rater khác.
+   - Không trao đổi với thành viên khác về các mã ca trong lúc dán nhãn.
+   - Không mở code, app hiển thị hay các file nhãn nội bộ trước khi hoàn tất nộp.
+
+2. CÁCH NẠP DỮ LIỆU VÀO CVAT 3D:
+   - Bước 1: Mở CVAT (giao diện web hoặc local container).
+   - Bước 2: Tạo Task mới dạng '3D Point Cloud'.
+   - Bước 3: Đặt Labels tương ứng:
+             * 'vehicle.car' (cho ô tô)
+             * 'human.pedestrian.adult' (cho người đi bộ)
+   - Bước 4: Tải toàn bộ các file .pcd trong thư mục gói này vào task (hoặc tải trực tiếp file zip).
+   - Bước 5: Nhấn 'Submit & Open' để bắt đầu công việc.
+
+3. QUY TRÌNH THAO TÁC TRÊN MỖI KHUNG HÌNH (TASK_CODE):
+   - Bước 1: Tra cứu file 'classes.csv' đính kèm để biết task_code này cần dán nhãn loại gì.
+   - Bước 2: Bấm giờ dán nhãn (tối đa 180 giây/ca).
+   - Bước 3: Chọn công cụ Cuboid (phím tắt N -> chọn label tương ứng).
+   - Bước 4: Quan sát cụm điểm trên các cửa sổ hình chiếu:
+             * Top View (chiếu từ trên xuống): căn tâm và chiều dài/rộng.
+             * Side/Front View: căn chiều cao và vị trí tiếp đất.
+             * 3D Perspective: xoay hướng (yaw) sao cho đầu xe/mặt người đúng hướng di chuyển.
+   - Bước 5: Kết thúc và ghi nhận:
+             * Nếu hoàn thành trong 180s: ghi status = 'completed', ghi thời gian duration_s.
+             * Nếu quá 180s chưa xong: ghi status = 'timeout'.
+             * Nếu bối cảnh quá thiếu thông tin: ghi status = 'insufficient_context'.
+   - Bước 6: Đánh giá độ khó (1-5) và mức tự tin (1-5) theo tài liệu config/rubric_r1.md.
+             Điền vào file ratings.csv của bạn.
+
+4. XUẤT VÀ NỘP KẾT QUẢ:
+   - Sau khi hoàn thành hết các ca trong gói:
+     * Vào Actions -> Export Task Dataset -> Chọn định dạng 'Datumaro 1.0' hoặc 'CVAT for video 1.1'.
+     * Đặt tên file export: export_{batch}_{rater}.zip (hoặc .json / .xml).
+     * Nộp file export cùng file ratings.csv cho Hưng.
+
+Cảm ơn bạn đã đóng góp vào tính chuẩn xác của nghiên cứu!
+================================================================================

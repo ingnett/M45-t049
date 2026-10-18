@@ -1,0 +1,21 @@
+{
+  "case_id": "demo-roundtrip",
+  "task_code": "T-ROUNDTRIP-01",
+  "center_m": [
+    10.0,
+    5.0,
+    1.5
+  ],
+  "size_wlh_m": [
+    2.2,
+    4.8,
+    1.7
+  ],
+  "rotation_wxyz": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    0.7071067811865476
+  ],
+  "yaw_deg": 90.0
+}

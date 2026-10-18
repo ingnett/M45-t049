@@ -1,0 +1,35 @@
+{
+  "model_type": "Ridge Regression (Pure NumPy)",
+  "alpha": 1.0,
+  "bias": 2.3125,
+  "feature_weights": {
+    "N": -0.0521,
+    "density": -0.0114,
+    "ring_count": 0.1049,
+    "coverage_avg": -0.2136,
+    "entropy_8_octant": 0.1337,
+    "patchiness": -0.0047,
+    "distance_m": 0.0103,
+    "size_anomaly": 0.041,
+    "boundary_clutter": -0.0768,
+    "l_shape_fit_residual": 0.1579
+  },
+  "regression_metrics": {
+    "mae": 0.2329,
+    "rmse": 0.3206,
+    "pearson_r": 0.2596,
+    "spearman_rho": 0.2762
+  },
+  "hard_case_metrics": {
+    "threshold": 4.0,
+    "true_positives": 0,
+    "false_positives": 0,
+    "false_negatives": 0,
+    "true_negatives": 30,
+    "hard_case_precision": 100.0,
+    "hard_case_recall": 100.0,
+    "hard_case_f1": 1.0
+  },
+  "train_samples_count": 16,
+  "total_samples_count": 30
+}

@@ -1,0 +1,9 @@
+class_name,distance_bin,n_cases,avg_distance_m,median_points,min_points,max_points,avg_vol_density,avg_center_err_m,avg_size_err_pct,avg_orientation_err_deg,avg_difficulty
+human.pedestrian.adult,10-20m (Gần),3,15.677,11.0,7,27,15.124,0.578,12.693333333333333,,2.333
+human.pedestrian.adult,20-30m (Trung bình),4,27.642,3.5,3,6,4.091,0.9229999999999999,18.97,,2.5
+human.pedestrian.adult,30-50m (Xa),6,32.868,3.0,2,4,3.168,1.0190000000000001,20.643333333333334,,2.5
+human.pedestrian.adult,≥50m (Rất xa),2,56.0,1.0,1,1,1.008,1.4275,27.75,,2.25
+vehicle.car,10-20m (Gần),2,19.11,39.5,36,43,2.667,0.3695,8.515,3.215,2.5
+vehicle.car,20-30m (Trung bình),3,26.857,19.0,9,22,1.181,0.5493333333333333,11.733333333333334,5.003333333333334,2.167
+vehicle.car,30-50m (Xa),7,38.834,8.0,6,11,0.533,0.727,14.745714285714287,30.447142857142858,2.429
+vehicle.car,≥50m (Rất xa),3,60.423,3.0,2,3,0.176,1.1093333333333335,21.403333333333336,12.833333333333334,2.167

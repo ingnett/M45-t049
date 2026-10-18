@@ -1,0 +1,9 @@
+case_id,rater_id,difficulty_1_5,confidence_1_5,duration_s,status,rubric_version,reason,is_demo
+# Ví dụ 1: Ca hoàn tất suôn sẻ trong 45s, xe rõ nét, tự tin cao
+demo-01,R1,1,5,45,completed,r1,,True
+# Ví dụ 2: Ca phải đối chiếu nhiều góc, xe ở xa khó xác định hướng, mất 110s
+demo-01,R2,3,3,110,completed,r1,orientation,True
+# Ví dụ 3: Ca hết thời gian 180s vẫn chưa dán xong box
+# demo-02,R1,,,180,timeout,r1,context;center,True
+# Ví dụ 4: Ca quá ít điểm / bị che hoàn toàn không đủ thông tin
+# demo-03,R3,,,60,insufficient_context,r1,context,True

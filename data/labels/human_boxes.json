@@ -1,0 +1,542 @@
+[
+  {
+    "case_id": "demo-b2-03",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-08",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-04",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-03",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-p02",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-06",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-04",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-02",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-dev-02",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-01",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-dev-01",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-05",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-p02",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-03",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-dev-02",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-02",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-08",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-dev-04",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-04",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-02",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-07",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-p01",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-07",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-07",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-05",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-02",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-08",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-06",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-08",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-05",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-02",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-dev-04",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-dev-01",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-05",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-p01",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-03",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-03",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-08",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-07",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-01",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-07",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-07",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-dev-03",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-01",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-02",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-05",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-08",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-06",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-04",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-06",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-dev-03",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-03",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-01",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-06",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-01",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-01",
+    "rater_id": "R1",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-test-04",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-05",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b2-06",
+    "rater_id": "R2",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  },
+  {
+    "case_id": "demo-b1-04",
+    "rater_id": "R3",
+    "coord_frame": "LIDAR_TOP",
+    "center_m": null,
+    "size_wlh_m": null,
+    "rotation_wxyz": null,
+    "status": "missing_box"
+  }
+]
