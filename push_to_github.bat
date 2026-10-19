@@ -4,7 +4,7 @@ echo ======================================================================
 echo   M45: PUSH TO GITHUB AUTOMATION SCRIPT
 echo ======================================================================
 echo.
-set /p REPO_URL="Nhập đường dẫn GitHub Repository (ví dụ https://github.com/username/m45.git): "
+set REPO_URL=https://github.com/ingnett/M45-t049.git
 
 if "%REPO_URL%"=="" (
     echo [!] Ban chua nhap duong dan repository. Huy thao tac.
