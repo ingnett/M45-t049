@@ -34,6 +34,8 @@ REPO_ROOT = Path(__file__).resolve().parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from src.analyzer.box_difficulty_rules import evaluate_box_difficulty, explain_rule_summary
+
 # ──────────────────────────────────────────────────────────────────────────────
 # CORE PHYSICS & GEOMETRY CONSTANTS
 # ──────────────────────────────────────────────────────────────────────────────
@@ -1242,6 +1244,41 @@ def main():
           Hệ thống M45 tự động phân loại rủi ro, phát hiện lỗi tiềm ẩn và hỗ trợ tinh chỉnh 3D trực quan trước khi chốt nhãn.
         </div>
         """, unsafe_allow_html=True)
+
+        with st.expander("📖 Xem BỘ QUY TẮC ĐỊNH LƯỢNG M45: Thế nào là Box Dễ vs Box Khó?", expanded=False):
+            st.markdown(explain_rule_summary())
+            st.markdown("---")
+            st.markdown("#### 🧪 Thử nghiệm Phân loại Box theo Quy tắc M45 (Interactive Rule Tester)")
+            test_c1, test_c2, test_c3, test_c4 = st.columns(4)
+            with test_c1:
+                t_cls = st.selectbox("Lớp đối tượng:", ["vehicle.car", "human.pedestrian.adult"], key="rule_test_cls")
+            with test_c2:
+                t_dist = st.slider("Cự ly khoảng cách d (m):", 2.0, 75.0, 28.0, 1.0, key="rule_test_dist")
+            with test_c3:
+                t_pts = st.slider("Số lượng điểm LiDAR N (pts):", 1, 120, 15, 1, key="rule_test_pts")
+            with test_c4:
+                t_occ = st.slider("Tỷ lệ che khuất (Occlusion):", 0.0, 1.0, 0.0, 0.05, key="rule_test_occ")
+
+            rule_eval = evaluate_box_difficulty(t_pts, t_dist, t_cls, t_occ)
+
+            res_box_color = "#ef4444" if rule_eval["tier"] == "HARD" else ("#f59e0b" if rule_eval["tier"] == "MEDIUM" else "#10b981")
+            st.markdown(f"""
+            <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid {res_box_color}; border-left: 6px solid {res_box_color}; border-radius: 12px; padding: 16px 20px; margin-top: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <div>
+                  <span style="font-size: 1.25rem; font-weight: 800; color: {res_box_color};">{rule_eval['risk_badge']}</span>
+                  <span style="font-size: 0.9rem; color: #94a3b8; margin-left: 12px;">(Điểm độ khó: <b>{rule_eval['difficulty_score']}/5.0</b> | Index: <b>{rule_eval['difficulty_index']}/100</b>)</span>
+                </div>
+              </div>
+              <div style="font-size: 0.88rem; color: #cbd5e1; margin-top: 8px;">
+                <b>Lý do phân loại:</b> {rule_eval['reasons_str']}<br>
+                <b>Lỗi tiềm ẩn:</b> {rule_eval['errors_predicted_str']}
+              </div>
+              <div style="margin-top: 10px; font-size: 0.82rem; color: #38bdf8; background: rgba(56, 189, 248, 0.08); padding: 8px 12px; border-radius: 6px;">
+                <b>SOP Thao tác cho Annotator:</b><br>{rule_eval['annotator_sop']}
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         # Tính toán phân loại rủi ro cho toàn bộ dataframe
         risk_diagnoses = [classify_prelabel_risk(row) for _, row in df.iterrows()]
