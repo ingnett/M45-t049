@@ -261,6 +261,81 @@ def compute_features_from_cloud(
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# ANNOTATOR PRE-LABEL ASSISTANT: RISK DIAGNOSIS & SMART REFINER
+# ──────────────────────────────────────────────────────────────────────────────
+def classify_prelabel_risk(row: pd.Series) -> Dict[str, Any]:
+    """Phân loại cấp độ rủi ro và phát hiện lỗi tiềm ẩn của pre-label box cho annotator."""
+    n_pts = int(row.get("N", 0))
+    dist = float(row.get("distance_m", 0.0))
+    cls_name = str(row.get("class_name", "vehicle.car"))
+    is_car = "car" in cls_name.lower() or "vehicle" in cls_name.lower()
+
+    reasons = []
+    actions = []
+    risk_level = "GREEN"
+
+    sparse_limit = 14 if is_car else 6
+    extreme_sparse = 6 if is_car else 2
+
+    if n_pts <= extreme_sparse:
+        risk_level = "RED"
+        reasons.append("Cực kỳ thưa điểm (N ≤ 5 pts)")
+        actions.append("Kiểm tra camera RGB hoặc track đối tượng liền kề để xác nhận.")
+    elif n_pts <= sparse_limit:
+        if risk_level != "RED":
+            risk_level = "YELLOW"
+        reasons.append("Thưa điểm ở các mặt biên")
+        actions.append("Khóa kích thước hộp theo chuẩn Class Prior.")
+
+    far_limit = 35.0 if is_car else 22.0
+    extreme_dist = 48.0 if is_car else 32.0
+
+    if dist >= extreme_dist:
+        risk_level = "RED"
+        reasons.append("Cự ly rất xa (≥ 48m)")
+        actions.append("Nguy cơ lệch tâm lớn: Neo tâm hộp vào cụm điểm nhìn thấy.")
+    elif dist >= far_limit:
+        if risk_level != "RED":
+            risk_level = "YELLOW"
+        reasons.append("Cự ly xa (≥ 35m)")
+
+    if is_car and (dist >= 32.0 or n_pts < 10):
+        reasons.append("Nguy cơ lộn góc Yaw ±180°")
+        actions.append("Đối chiếu hướng di chuyển để chốt góc quay đầu/đuôi xe.")
+
+    if not reasons:
+        reasons.append("Đủ điểm biên & cự ly an toàn")
+        actions.append("Duyệt nhanh (Fast review)")
+
+    badge_map = {
+        "RED": "🔴 BOX KHÓ (HARD)",
+        "YELLOW": "🟡 CẦN CHÚ Ý",
+        "GREEN": "🟢 AN TOÀN",
+    }
+
+    return {
+        "risk_level": risk_level,
+        "risk_badge": badge_map[risk_level],
+        "reasons": "; ".join(reasons),
+        "actions": "; ".join(actions),
+    }
+
+
+def refine_prelabel_box(center: np.ndarray, wlh: np.ndarray, yaw: float, class_name: str) -> Dict[str, Any]:
+    """Tự động tinh chỉnh hộp pre-label dựa trên Class Prior và hình học cảm biến."""
+    prior = CLASS_PRIORS.get(class_name, CLASS_PRIORS["vehicle.car"])
+    prior_wlh = np.array(prior["wlh"])
+    refined_wlh = 0.85 * prior_wlh + 0.15 * wlh
+    refined_center = np.copy(center)
+    return {
+        "refined_center": refined_center,
+        "refined_wlh": refined_wlh,
+        "refined_yaw": yaw,
+        "size_change_pct": float(np.mean(np.abs(refined_wlh - wlh) / wlh) * 100),
+    }
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # PURE NUMPY RIDGE REGRESSION
 # ──────────────────────────────────────────────────────────────────────────────
 def train_ridge_pure_numpy(df_train: pd.DataFrame, alpha: float = 1.0) -> Tuple[Any, Dict[str, float], float]:
@@ -674,13 +749,14 @@ def main():
         """, unsafe_allow_html=True)
 
     # TABS
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "🌍  1. Vấn đề & Cơ sở Vật lý",
         "📉  2. Mật độ vs Cự ly / Class",
         "🤖  3. Mô hình Hồi quy Ridge",
         "🚨  4. Sàng lọc Ca khó (Hard Cases)",
         "🧊  5. Trực quan hóa LiDAR 3D",
-        "📑  6. Báo cáo & Hướng dẫn Deploy",
+        "🎯  6. Trợ lý Pre-label & Sàng lọc Box Khó",
+        "📑  7. Báo cáo & Hướng dẫn Deploy",
     ])
 
     # TAB 1
@@ -1155,8 +1231,253 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
-    # TAB 6
+    # TAB 6: TRỢ LÝ PRE-LABEL & SÀNG LỌC BOX KHÓ
     with tab6:
+        st.markdown('<div class="section-title">🎯 Trợ lý Pre-labeling: Định vị & Sàng lọc Box Khó cho Annotator</div>', unsafe_allow_html=True)
+        st.markdown(r"""
+        <div class="box-blue">
+          <b>Mục tiêu Trợ lý:</b> Khi áp dụng mô hình 3D AI để sinh nhãn tự động (Pre-labeling) hoặc rà soát nhãn số lượng lớn,
+          các ca dễ ($N \ge 25$) thường chuẩn xác. Tuy nhiên, <b>các Box Khó</b> ($N < 8$, cự ly $>35\\text{m}$, che khuất)
+          thường mắc 3 lỗi sai chí mạng: <b>Lộn góc Yaw $\\pm 180^\\circ$</b>, <b>Lệch tâm ($\\Delta\\text{Center}$)</b> và <b>Co cụm kích thước ($\\Delta\\text{Size}$)</b>.
+          Hệ thống M45 tự động phân loại rủi ro, phát hiện lỗi tiềm ẩn và hỗ trợ tinh chỉnh 3D trực quan trước khi chốt nhãn.
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Tính toán phân loại rủi ro cho toàn bộ dataframe
+        risk_diagnoses = [classify_prelabel_risk(row) for _, row in df.iterrows()]
+        df_annotator = df.copy()
+        df_annotator["risk_level"] = [d["risk_level"] for d in risk_diagnoses]
+        df_annotator["risk_badge"] = [d["risk_badge"] for d in risk_diagnoses]
+        df_annotator["prelabel_diagnosis"] = [d["reasons"] for d in risk_diagnoses]
+        df_annotator["annotator_action"] = [d["actions"] for d in risk_diagnoses]
+
+        n_red = int(np.sum(df_annotator["risk_level"] == "RED"))
+        n_yellow = int(np.sum(df_annotator["risk_level"] == "YELLOW"))
+        n_green = int(np.sum(df_annotator["risk_level"] == "GREEN"))
+
+        # 3 Thẻ thống kê cấp độ rủi ro
+        tier_c1, tier_c2, tier_c3 = st.columns(3)
+        with tier_c1:
+            st.markdown(f"""
+            <div class="kpi-card" style="border-left: 4px solid #ef4444;">
+              <div class="kpi-header">🔴 BOX CỰC KHÓ (HIGH-RISK)</div>
+              <div class="kpi-number" style="color: #ef4444;">{n_red} ca</div>
+              <div class="kpi-caption">Bắt buộc Annotator review kỹ (Nguy cơ lộn yaw / lệch tâm)</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with tier_c2:
+            st.markdown(f"""
+            <div class="kpi-card" style="border-left: 4px solid #f59e0b;">
+              <div class="kpi-header">🟡 CẦN CHÚ Ý (MEDIUM RISK)</div>
+              <div class="kpi-number" style="color: #f59e0b;">{n_yellow} ca</div>
+              <div class="kpi-caption">Kiểm tra kích thước biên và mặt đáy</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with tier_c3:
+            st.markdown(f"""
+            <div class="kpi-card" style="border-left: 4px solid #10b981;">
+              <div class="kpi-header">🟢 AN TOÀN (SAFE PRE-LABEL)</div>
+              <div class="kpi-number" style="color: #10b981;">{n_green} ca</div>
+              <div class="kpi-caption">Nhiều điểm, cự ly gần - Duyệt nhanh trong 3s</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown('<div class="section-title">🔍 Bảng Sàng lọc Pre-label Boxes theo Cấp độ Rủi ro</div>', unsafe_allow_html=True)
+        tier_filter = st.radio(
+            "Lọc danh sách box theo cấp độ:",
+            options=["Tất cả boxes", "🔴 Chỉ xem Box Khó (High Risk)", "🟡 Xem Box Cần chú ý (Medium Risk)"],
+            horizontal=True,
+        )
+
+        if tier_filter == "🔴 Chỉ xem Box Khó (High Risk)":
+            filtered_annotator = df_annotator[df_annotator["risk_level"] == "RED"]
+        elif tier_filter == "🟡 Xem Box Cần chú ý (Medium Risk)":
+            filtered_annotator = df_annotator[df_annotator["risk_level"] == "YELLOW"]
+        else:
+            filtered_annotator = df_annotator
+
+        disp_cols = [
+            "case_id", "class_name", "distance_m", "N", "risk_badge",
+            "prelabel_diagnosis", "annotator_action"
+        ]
+        st.dataframe(filtered_annotator[disp_cols], use_container_width=True)
+
+        # PHẦN 2: TINH CHỈNH VÀ SO SÁNH HỘP 3D CHO ANNOTATOR
+        st.markdown('<div class="section-title">🛠️ Bộ Tinh chỉnh & So sánh Hộp 3D Trực quan (3D Visual Refiner)</div>', unsafe_allow_html=True)
+        hard_box_options = filtered_annotator["case_id"].tolist()
+        if not hard_box_options:
+            hard_box_options = df_annotator["case_id"].tolist()
+
+        sel_box_id = st.selectbox("Chọn Box cần kiểm tra và tinh chỉnh:", options=hard_box_options, index=0, key="box_refiner_select")
+        target_row = df_annotator[df_annotator["case_id"] == sel_box_id].iloc[0]
+
+        t_center = np.copy(target_row["_center"])
+        t_wlh = np.copy(target_row["_wlh"])
+        t_yaw = float(target_row["_yaw"])
+        t_pts = target_row["_pts"]
+        t_cls = target_row["class_name"]
+
+        ref_info = refine_prelabel_box(t_center, t_wlh, t_yaw, t_cls)
+
+        ref_c1, ref_c2 = st.columns([1.8, 1.2], gap="large")
+
+        with ref_c2:
+            st.markdown(f"""
+            <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid #334155; border-radius: 14px; padding: 18px; margin-bottom: 16px;">
+              <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase;">CHẨN ĐOÁN HỘP TIỀN GÁN NHÃN</div>
+              <div style="font-size: 1.3rem; font-weight: 800; color: #f1f5f9; margin: 4px 0;">{sel_box_id} ({t_cls.split('.')[-1]})</div>
+              <div style="margin: 8px 0;">
+                <span class="badge-pill {'red' if target_row['risk_level']=='RED' else ('yellow' if target_row['risk_level']=='YELLOW' else 'green')}">
+                  {target_row['risk_badge']}
+                </span>
+              </div>
+              <div style="font-size: 0.85rem; color: #cbd5e1; margin-top: 8px;">
+                <b>Lỗi tiềm ẩn:</b> {target_row['prelabel_diagnosis']}<br>
+                <b>Hướng xử lý:</b> {target_row['annotator_action']}
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("#### 🎛️ Thanh trượt Tinh chỉnh Thủ công (Interactive Nudge)")
+            nudge_dx = st.slider("Dịch chuyển tâm ΔX (m):", -1.0, 1.0, 0.0, 0.05, key="nudge_dx")
+            nudge_dy = st.slider("Dịch chuyển tâm ΔY (m):", -1.0, 1.0, 0.0, 0.05, key="nudge_dy")
+            nudge_dyaw = st.slider("Xoay góc Yaw (°):", -180.0, 180.0, 0.0, 5.0, key="nudge_dyaw")
+
+            auto_prior = st.checkbox("Áp dụng Kích thước Tiên nghiệm (Class Prior w/l/h)", value=True)
+
+            if auto_prior:
+                active_wlh = ref_info["refined_wlh"]
+            else:
+                active_wlh = t_wlh
+
+            active_center = t_center + np.array([nudge_dx, nudge_dy, 0.0])
+            active_yaw = t_yaw + math.radians(nudge_dyaw)
+
+            st.markdown(f"""
+            <div class="box-green" style="font-size: 0.82rem;">
+              ✅ <b>Quy tắc 3 bước cho Annotator:</b><br>
+              1. <b>Kích thước:</b> Khóa kích thước theo chuẩn lớp ({active_wlh[0]:.2f}m × {active_wlh[1]:.2f}m × {active_wlh[2]:.2f}m).<br>
+              2. <b>Mặt nhìn thấy:</b> Căn viền hộp sát vào điểm LiDAR phản xạ đầu tiên.<br>
+              3. <b>Hướng di chuyển:</b> Đảm bảo mũi tên hướng về phía trước vật thể.
+            </div>
+            """, unsafe_allow_html=True)
+
+        with ref_c1:
+            # Render 3D viewer comparing Initial Prelabel vs Refined Box
+            fig_ref = go.Figure()
+
+            # Background points
+            mask_box = points_in_box_mask(t_pts, active_center, active_wlh, active_yaw)
+            in_cloud = t_pts[mask_box]
+            out_cloud = t_pts[~mask_box]
+
+            if len(out_cloud) > 0:
+                fig_ref.add_trace(go.Scatter3d(
+                    x=out_cloud[:, 0], y=out_cloud[:, 1], z=out_cloud[:, 2],
+                    mode="markers",
+                    marker=dict(size=1.6, color="#334155", opacity=0.3),
+                    name="Điểm lân cận",
+                ))
+
+            if len(in_cloud) > 0:
+                fig_ref.add_trace(go.Scatter3d(
+                    x=in_cloud[:, 0], y=in_cloud[:, 1], z=in_cloud[:, 2],
+                    mode="markers",
+                    marker=dict(size=5, color="#38bdf8", opacity=0.95),
+                    name=f"Điểm trên vật thể ({len(in_cloud)} pts)",
+                ))
+
+            # Hộp Pre-label ban đầu (Nét đỏ)
+            ox, oy, oz = compute_cuboid_wireframe(t_center, t_wlh, t_yaw)
+            fig_ref.add_trace(go.Scatter3d(
+                x=ox, y=oy, z=oz,
+                mode="lines",
+                line=dict(color="#ef4444", width=2.5, dash="dash"),
+                name="Pre-label Ban đầu (Chưa chỉnh)",
+            ))
+
+            # Hộp Khuyến nghị đã Tinh chỉnh (Nét vàng/xanh)
+            rx, ry, rz = compute_cuboid_wireframe(active_center, active_wlh, active_yaw)
+            fig_ref.add_trace(go.Scatter3d(
+                x=rx, y=ry, z=rz,
+                mode="lines",
+                line=dict(color="#10b981", width=4),
+                name="Hộp Khuyến nghị (Refined Box)",
+            ))
+
+            # LiDAR sensor
+            fig_ref.add_trace(go.Scatter3d(
+                x=[0], y=[0], z=[0],
+                mode="markers+text",
+                marker=dict(size=7, color="#ef4444", symbol="diamond"),
+                text=["LIDAR"], textposition="top center",
+                name="Sensor",
+            ))
+
+            fig_ref.update_layout(
+                template="plotly_dark",
+                paper_bgcolor="rgba(0,0,0,0)",
+                scene=dict(
+                    bgcolor="rgba(9, 13, 22, 1)",
+                    xaxis=dict(title="X (m)", gridcolor="#1e293b", showbackground=False),
+                    yaxis=dict(title="Y (m)", gridcolor="#1e293b", showbackground=False),
+                    zaxis=dict(title="Z (m)", gridcolor="#1e293b", showbackground=False),
+                    camera=dict(eye=dict(x=1.3, y=1.3, z=0.9)),
+                ),
+                height=480,
+                margin=dict(l=0, r=0, t=0, b=0),
+                legend=dict(bgcolor="rgba(0,0,0,0)"),
+            )
+            st.plotly_chart(fig_ref, use_container_width=True)
+
+        # PHẦN 3: XUẤT PRE-LABELS GẮN TAG CHO CVAT 3D
+        st.markdown('<div class="section-title">📤 Xuất Dữ liệu Box Khó & Gán Tag cho CVAT 3D</div>', unsafe_allow_html=True)
+        exp_col1, exp_col2 = st.columns(2)
+
+        with exp_col1:
+            st.markdown("""
+            **Tệp CSV Hướng dẫn Annotator:**
+            Chứa danh sách box kèm chỉ số độ khó, cảnh báo rủi ro cụ thể và hướng dẫn thao tác từng bước cho annotator khi review.
+            """)
+            annotator_csv_data = df_annotator[disp_cols].to_csv(index=False).encode("utf-8")
+            st.download_button(
+                "⬇️ Tải Danh sách Box Khó cho Annotator (CSV)",
+                annotator_csv_data,
+                "hard_boxes_for_annotator.csv",
+                "text/csv",
+                key="btn_down_annotator_csv",
+            )
+
+        with exp_col2:
+            st.markdown("""
+            **Tệp CVAT 3D Tagged Pre-labels (JSON):**
+            Định dạng hộp 3D sẵn sàng import vào CVAT 3D với tag tự động `[HARD: <lý_do>]`. Annotator có thể dùng bộ lọc tag trong CVAT để review ngay các ca khó!
+            """)
+            cvat_records = []
+            for _, r in df_annotator.iterrows():
+                cvat_records.append({
+                    "case_id": r["case_id"],
+                    "class_name": r["class_name"],
+                    "center_m": [float(c) for c in r["_center"]],
+                    "size_wlh_m": [float(s) for s in r["_wlh"]],
+                    "yaw_rad": float(r["_yaw"]),
+                    "risk_level": r["risk_level"],
+                    "tag": f"HARD_{r['class_name']}" if r["risk_level"] == "RED" else "NORMAL",
+                    "annotator_notes": r["annotator_action"],
+                })
+            cvat_json_str = json.dumps(cvat_records, indent=2, ensure_ascii=False).encode("utf-8")
+            st.download_button(
+                "⬇️ Tải CVAT 3D Tagged Pre-labels (JSON)",
+                cvat_json_str,
+                "cvat_prelabels_tagged.json",
+                "application/json",
+                key="btn_down_cvat_json",
+            )
+
+    # TAB 7: BÁO CÁO & HƯỚNG DẪN DEPLOY
+    with tab7:
         st.markdown('<div class="section-title">📑 Trung tâm Báo cáo Chuẩn Đề tài M45</div>', unsafe_allow_html=True)
         report_path = REPO_ROOT / "outputs" / "reports" / "report_density_vs_distance_class.md"
         if report_path.exists():
