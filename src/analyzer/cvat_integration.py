@@ -63,17 +63,134 @@ def normalize_angle_rad(angle: float) -> float:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 2. XUẤT PRE-LABELS ĐỊNH DẠNG CVAT 3D XML (CVAT for Video / 3D 1.1)
+# 2. BỘ ĐỘNG CƠ XẾP HẠNG ĐỘ KHÓ BOX (BOX DIFFICULTY RANKING ENGINE)
+# ──────────────────────────────────────────────────────────────────────────────
+def compute_dataset_box_ranks(
+    boxes_data: Union[List[Dict[str, Any]], pd.DataFrame],
+    sort_by_rank: bool = True,
+) -> List[Dict[str, Any]]:
+    """
+    Xếp hạng toàn bộ Bounding Box trong tập dữ liệu theo độ khó (Ranking Engine):
+    - Đánh giá điểm độ khó chính xác từng box theo công thức vật lý và kinh nghiệm nuScenes.
+    - Sắp xếp giảm dần từ Box Khó nhất (#01) đến Box Dễ nhất (#N).
+    - Gán huy chương thứ hạng (🥇 Top 1-3, 🥈 Top 4-10, 🥉 Top 11-20, ⚪ Còn lại).
+    - Gán mã màu CVAT (Bright Red -> Green) và cấp độ Rank Tier để CVAT 3D hiển thị trực quan.
+    """
+    items: List[Dict[str, Any]] = []
+    if isinstance(boxes_data, pd.DataFrame):
+        for idx, row in boxes_data.iterrows():
+            c = row.get("_center", [0.0, 0.0, 0.0])
+            s = row.get("_wlh", [1.93, 4.62, 1.69])
+            items.append({
+                "case_id": row.get("case_id", f"case_{idx:04d}"),
+                "class_name": row.get("class_name", "vehicle.car"),
+                "center_m": [float(x) for x in c],
+                "size_wlh_m": [float(x) for x in s],
+                "yaw_rad": float(row.get("_yaw", 0.0)),
+                "N": int(row.get("N", 20)),
+                "distance_m": float(row.get("distance_m", 15.0)),
+                "occlusion_ratio": float(row.get("occlusion_ratio", 0.0)),
+                "points_xyz": row.get("_pts", None),
+                "_orig_idx": idx,
+            })
+    else:
+        for idx, b in enumerate(boxes_data):
+            c = b.get("center_m", [0.0, 0.0, 0.0])
+            s = b.get("size_wlh_m", [1.93, 4.62, 1.69])
+            items.append({
+                "case_id": b.get("case_id", f"case_{idx:04d}"),
+                "class_name": b.get("class_name", "vehicle.car"),
+                "center_m": [float(x) for x in c],
+                "size_wlh_m": [float(x) for x in s],
+                "yaw_rad": float(b.get("yaw_rad", 0.0)),
+                "N": int(b.get("N", b.get("point_count", 20))),
+                "distance_m": float(b.get("distance_m", math.sqrt(c[0]**2 + c[1]**2 + c[2]**2))),
+                "occlusion_ratio": float(b.get("occlusion_ratio", 0.0)),
+                "points_xyz": b.get("points_xyz", None),
+                "_orig_idx": idx,
+            })
+
+    # Đánh giá độ khó cho từng box
+    for item in items:
+        diff = evaluate_box_difficulty(
+            point_count=item["N"],
+            distance_m=item["distance_m"],
+            class_name=item["class_name"],
+            occlusion_ratio=item["occlusion_ratio"],
+        )
+        item["difficulty_score"] = diff["difficulty_score"]
+        item["difficulty_index"] = diff["difficulty_index"]
+        item["difficulty_tier"] = diff["tier"]
+        item["risk_flags"] = diff["errors_predicted_str"]
+        item["annotator_sop"] = diff["annotator_sop"]
+        item["reasons_str"] = diff["reasons_str"]
+
+    # Sắp xếp giảm dần theo điểm độ khó (Khó nhất lên đầu)
+    items.sort(key=lambda x: (x["difficulty_score"], x["distance_m"], -x["N"]), reverse=True)
+
+    n_total = len(items)
+    for rank_idx, item in enumerate(items, start=1):
+        item["difficulty_rank"] = rank_idx
+        item["rank_tag"] = f"#{rank_idx:02d}"
+        
+        # Huy chương & Nhãn
+        if rank_idx <= 3:
+            medal = "🥇"
+        elif rank_idx <= 10:
+            medal = "🥈"
+        elif rank_idx <= 20:
+            medal = "🥉"
+        else:
+            medal = "⚪"
+        item["rank_medal"] = f"{medal} #{rank_idx:02d}"
+        item["rank_badge"] = f"{medal} #{rank_idx:02d} (Score: {item['difficulty_score']:.2f})"
+
+        # Phân vị (Percentile)
+        pct = (rank_idx / max(1, n_total)) * 100.0
+        item["rank_percentile"] = f"Top {int(math.ceil(pct))}% Khó" if pct <= 50.0 else f"Dễ (Bottom {int(100-pct)}%)"
+
+        # Tier phân loại trực quan trong CVAT
+        score = item["difficulty_score"]
+        if score >= 4.2:
+            item["rank_tier"] = "[RANK 1] 🔴 CỰC KHÓ"
+            item["cvat_color"] = "#EF4444"
+        elif score >= 3.6:
+            item["rank_tier"] = "[RANK 2] 🟠 KHÓ"
+            item["cvat_color"] = "#F97316"
+        elif score >= 2.2:
+            item["rank_tier"] = "[RANK 3] 🟡 TRUNG BÌNH"
+            item["cvat_color"] = "#F59E0B"
+        else:
+            item["rank_tier"] = "[RANK 4] 🟢 DỄ"
+            item["cvat_color"] = "#10B981"
+
+    if not sort_by_rank:
+        items.sort(key=lambda x: x["_orig_idx"])
+
+    return items
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 3. XUẤT PRE-LABELS ĐỊNH DẠNG CVAT 3D XML (CVAT for Video / 3D 1.1)
 # ──────────────────────────────────────────────────────────────────────────────
 def export_cvat_3d_xml(
-    boxes_data: List[Dict[str, Any]],
+    boxes_data: Union[List[Dict[str, Any]], pd.DataFrame],
     task_name: str = "M45_3D_LiDAR_Task",
     include_attributes: bool = True,
+    apply_ranking: bool = True,
 ) -> str:
     """
-    Tạo nội dung XML chuẩn CVAT for 3D/video 1.1 chứa các 3D cuboid kèm thuộc tính độ khó.
-    CVAT 3D cho phép hiển thị các thuộc tính này trên thanh thông tin và lọc theo nhãn/thuộc tính.
+    Tạo nội dung XML chuẩn CVAT for 3D/video 1.1 chứa các 3D cuboid kèm BẢNG XẾP HẠNG ĐỘ KHÓ.
+    CVAT 3D cho phép hiển thị các thuộc tính difficulty_rank, rank_badge, cvat_color, và lọc theo thứ hạng.
     """
+    # Xếp hạng độ khó nếu cần
+    if apply_ranking:
+        ranked_boxes = compute_dataset_box_ranks(boxes_data, sort_by_rank=True)
+    elif isinstance(boxes_data, pd.DataFrame):
+        ranked_boxes = compute_dataset_box_ranks(boxes_data, sort_by_rank=False)
+    else:
+        ranked_boxes = boxes_data
+
     root = ET.Element("annotations")
     
     # Version
@@ -84,7 +201,7 @@ def export_cvat_3d_xml(
     meta_elem = ET.SubElement(root, "meta")
     task_elem = ET.SubElement(meta_elem, "task")
     ET.SubElement(task_elem, "name").text = task_name
-    ET.SubElement(task_elem, "size").text = str(len(boxes_data))
+    ET.SubElement(task_elem, "size").text = str(len(ranked_boxes))
     
     # Labels metadata
     labels_elem = ET.SubElement(task_elem, "labels")
@@ -97,8 +214,12 @@ def export_cvat_3d_xml(
         attrs_elem = ET.SubElement(lbl, "attributes")
         
         attr_defs = [
-            ("difficulty_tier", "select", "EASY\nMEDIUM\nHARD"),
+            ("difficulty_rank", "text", "#01"),
+            ("rank_badge", "text", "🥇 #01 (Score: 4.5)"),
+            ("difficulty_tier", "select", "[RANK 1] 🔴 CỰC KHÓ\n[RANK 2] 🟠 KHÓ\n[RANK 3] 🟡 TRUNG BÌNH\n[RANK 4] 🟢 DỄ\nEASY\nMEDIUM\nHARD"),
             ("difficulty_score", "number", "1.0"),
+            ("rank_percentile", "text", "Top 5% Khó"),
+            ("cvat_color", "text", "#EF4444"),
             ("points_count", "number", "0"),
             ("distance_m", "number", "0.0"),
             ("risk_flags", "text", "None"),
@@ -113,8 +234,8 @@ def export_cvat_3d_xml(
             ET.SubElement(a_elem, "default_value").text = a_vals.split("\n")[0]
             ET.SubElement(a_elem, "values").text = a_vals
 
-    # Thêm từng khung hình / PCD
-    for idx, box in enumerate(boxes_data):
+    # Thêm từng khung hình / PCD theo thứ tự xếp hạng
+    for idx, box in enumerate(ranked_boxes):
         case_id = str(box.get("case_id", f"frame_{idx:04d}"))
         pcd_name = f"{case_id}.pcd"
         
@@ -125,16 +246,18 @@ def export_cvat_3d_xml(
         yaw = float(box.get("yaw_rad", 0.0))
         cls_name = str(box.get("class_name", "vehicle.car"))
         
-        # Đánh giá độ khó nếu chưa có
         pts = int(box.get("N", box.get("point_count", 20)))
         dist = float(box.get("distance_m", math.sqrt(center[0]**2 + center[1]**2 + center[2]**2)))
         occ = float(box.get("occlusion_ratio", 0.0))
         
-        diff = evaluate_box_difficulty(pts, dist, cls_name, occ)
-        tier = box.get("difficulty_tier", diff["tier"])
-        score = box.get("difficulty_score", diff["difficulty_score"])
-        risk_flags = box.get("risk_flags", diff["errors_predicted_str"])
-        sop = box.get("annotator_sop", diff["annotator_sop"])
+        tier = box.get("rank_tier", box.get("difficulty_tier", "MEDIUM"))
+        score = float(box.get("difficulty_score", 2.5))
+        rank_tag = box.get("rank_tag", f"#{idx+1:02d}")
+        rank_badge = box.get("rank_badge", f"#{idx+1}")
+        pct_tag = box.get("rank_percentile", "N/A")
+        c_hex = box.get("cvat_color", "#38bdf8")
+        risk_flags = box.get("risk_flags", "None")
+        sop = box.get("annotator_sop", "Standard SOP")
 
         # Tạo thẻ cuboid
         pos_str = f"{center[0]:.4f},{center[1]:.4f},{center[2]:.4f}"
@@ -156,8 +279,12 @@ def export_cvat_3d_xml(
                 ae = ET.SubElement(cuboid_elem, "attribute", name=name)
                 ae.text = str(val)
                 
+            add_attr("difficulty_rank", rank_tag)
+            add_attr("rank_badge", rank_badge)
             add_attr("difficulty_tier", tier)
             add_attr("difficulty_score", f"{score:.2f}")
+            add_attr("rank_percentile", pct_tag)
+            add_attr("cvat_color", c_hex)
             add_attr("points_count", pts)
             add_attr("distance_m", f"{dist:.2f}")
             add_attr("risk_flags", risk_flags)
@@ -174,17 +301,25 @@ def export_cvat_3d_xml(
 # 3. XUẤT PRE-LABELS ĐỊNH DẠNG CVAT DATUMARO 3D JSON (v1.0)
 # ──────────────────────────────────────────────────────────────────────────────
 def export_datumaro_3d_json(
-    boxes_data: List[Dict[str, Any]],
+    boxes_data: Union[List[Dict[str, Any]], pd.DataFrame],
     dataset_name: str = "M45_Datumaro_3D",
+    apply_ranking: bool = True,
 ) -> Dict[str, Any]:
     """
-    Tạo cấu trúc JSON định dạng Datumaro 1.0 3D được CVAT hỗ trợ nhập/xuất trực tiếp.
+    Tạo cấu trúc JSON định dạng Datumaro 1.0 3D kèm BẢNG XẾP HẠNG ĐỘ KHÓ.
     """
+    if apply_ranking:
+        ranked_boxes = compute_dataset_box_ranks(boxes_data, sort_by_rank=True)
+    elif isinstance(boxes_data, pd.DataFrame):
+        ranked_boxes = compute_dataset_box_ranks(boxes_data, sort_by_rank=False)
+    else:
+        ranked_boxes = boxes_data
+
     labels = ["vehicle.car", "human.pedestrian.adult"]
     label_map = {name: idx for idx, name in enumerate(labels)}
 
     items = []
-    for idx, box in enumerate(boxes_data):
+    for idx, box in enumerate(ranked_boxes):
         case_id = str(box.get("case_id", f"case_{idx:04d}"))
         center = [float(c) for c in box.get("center_m", [0.0, 0.0, 0.0])]
         size = [float(s) for s in box.get("size_wlh_m", [1.93, 4.62, 1.69])]
@@ -194,8 +329,12 @@ def export_datumaro_3d_json(
 
         pts = int(box.get("N", box.get("point_count", 20)))
         dist = float(box.get("distance_m", math.sqrt(center[0]**2 + center[1]**2 + center[2]**2)))
-        occ = float(box.get("occlusion_ratio", 0.0))
-        diff = evaluate_box_difficulty(pts, dist, cls_name, occ)
+        tier = box.get("rank_tier", box.get("difficulty_tier", "MEDIUM"))
+        score = float(box.get("difficulty_score", 2.5))
+        rank_tag = box.get("rank_tag", f"#{idx+1:02d}")
+        rank_badge = box.get("rank_badge", f"#{idx+1}")
+        pct_tag = box.get("rank_percentile", "N/A")
+        c_hex = box.get("cvat_color", "#38bdf8")
 
         ann = {
             "id": 1,
@@ -205,13 +344,17 @@ def export_datumaro_3d_json(
             "scale": size,
             "rotation": [0.0, 0.0, yaw],
             "attributes": {
-                "difficulty_tier": diff["tier"],
-                "difficulty_score": diff["difficulty_score"],
+                "difficulty_rank": rank_tag,
+                "rank_badge": rank_badge,
+                "difficulty_tier": tier,
+                "difficulty_score": round(score, 2),
+                "rank_percentile": pct_tag,
+                "cvat_color": c_hex,
                 "points_count": pts,
                 "distance_m": round(dist, 2),
-                "risk_flags": diff["errors_predicted_str"],
-                "annotator_sop": diff["annotator_sop"],
-                "is_hard_case": diff["tier"] == "HARD",
+                "risk_flags": box.get("risk_flags", "None"),
+                "annotator_sop": box.get("annotator_sop", "Standard SOP"),
+                "is_hard_case": "HARD" in tier or "CỰC KHÓ" in tier or "KHÓ" in tier,
             },
         }
 
@@ -223,7 +366,7 @@ def export_datumaro_3d_json(
 
     datumaro_doc = {
         "info": {
-            "description": "M45 nuScenes 3D LiDAR Pre-labels with Difficulty Tags",
+            "description": "M45 nuScenes 3D LiDAR Pre-labels with Difficulty Ranking",
             "version": "1.0",
             "format": "datumaro_3d",
         },
@@ -231,8 +374,9 @@ def export_datumaro_3d_json(
             "label": {
                 "labels": [{"name": name, "parent": ""} for name in labels],
                 "attributes": [
-                    "difficulty_tier", "difficulty_score", "points_count",
-                    "distance_m", "risk_flags", "annotator_sop", "is_hard_case"
+                    "difficulty_rank", "rank_badge", "difficulty_tier",
+                    "difficulty_score", "rank_percentile", "cvat_color",
+                    "points_count", "distance_m", "risk_flags", "annotator_sop", "is_hard_case"
                 ],
             }
         },

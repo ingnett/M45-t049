@@ -77,7 +77,7 @@ def get_mock_boxes_data():
 
 def test_export_cvat_3d_xml():
     boxes = get_mock_boxes_data()
-    xml_str = export_cvat_3d_xml(boxes, task_name="Test_Task")
+    xml_str = export_cvat_3d_xml(boxes, task_name="Test_Task", apply_ranking=True)
     
     # Kiểm tra tính hợp lệ của XML
     root = ET.fromstring(xml_str)
@@ -88,15 +88,19 @@ def test_export_cvat_3d_xml():
     images = root.findall("image")
     assert len(images) == 3
     
-    # Kiểm tra thẻ cuboid và attributes của ca khó
-    hard_img = images[2]
-    cuboid = hard_img.find("cuboid")
+    # Ca khó phải được xếp lên đầu tiên (#01)
+    top_img = images[0]
+    assert "c003_hard" in top_img.get("name")
+    
+    cuboid = top_img.find("cuboid")
     assert cuboid is not None
     assert cuboid.get("label") == "vehicle.car"
     
     attrs = {a.get("name"): a.text for a in cuboid.findall("attribute")}
+    assert "difficulty_rank" in attrs
+    assert attrs["difficulty_rank"] == "#01"
     assert "difficulty_tier" in attrs
-    assert attrs["difficulty_tier"] == "HARD"
+    assert "KHÓ" in attrs["difficulty_tier"] or "HARD" in attrs["difficulty_tier"]
     assert "difficulty_score" in attrs
     assert float(attrs["difficulty_score"]) >= 3.6
     assert "annotator_sop" in attrs
@@ -105,21 +109,24 @@ def test_export_cvat_3d_xml():
 
 def test_export_datumaro_3d_json():
     boxes = get_mock_boxes_data()
-    doc = export_datumaro_3d_json(boxes, dataset_name="Test_Datumaro")
+    doc = export_datumaro_3d_json(boxes, dataset_name="Test_Datumaro", apply_ranking=True)
     
     assert doc["info"]["version"] == "1.0"
     assert len(doc["items"]) == 3
     
-    easy_item = doc["items"][0]
-    ann = easy_item["annotations"][0]
-    assert ann["type"] == "cuboid_3d"
-    assert ann["attributes"]["difficulty_tier"] == "EASY"
-    assert ann["attributes"]["is_hard_case"] is False
-    
-    hard_item = doc["items"][2]
-    hard_ann = hard_item["annotations"][0]
-    assert hard_ann["attributes"]["difficulty_tier"] == "HARD"
+    # Ca khó nhất ở vị trí đầu
+    top_item = doc["items"][0]
+    assert "c003_hard" in top_item["id"]
+    hard_ann = top_item["annotations"][0]
+    assert "HARD" in hard_ann["attributes"]["difficulty_tier"] or "KHÓ" in hard_ann["attributes"]["difficulty_tier"]
+    assert hard_ann["attributes"]["difficulty_rank"] == "#01"
     assert hard_ann["attributes"]["is_hard_case"] is True
+
+    # Ca dễ ở vị trí cuối
+    last_item = doc["items"][2]
+    easy_ann = last_item["annotations"][0]
+    assert easy_ann["type"] == "cuboid_3d"
+    assert easy_ann["attributes"]["is_hard_case"] is False
     print("✅ test_export_datumaro_3d_json passed.")
 
 

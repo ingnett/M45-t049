@@ -36,6 +36,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from src.analyzer.box_difficulty_rules import evaluate_box_difficulty, explain_rule_summary
 from src.analyzer.cvat_integration import (
+    compute_dataset_box_ranks,
     export_cvat_3d_xml,
     export_datumaro_3d_json,
     create_cvat_task_pack_zip,
@@ -1626,8 +1627,126 @@ def main():
 
         st.markdown("---")
 
-        # PHẦN 2: KIỂM TOÁN CHẤT LƯỢNG ANNOTATION TỪ CVAT
-        st.markdown('<div class="section-title">📥 2. Kiểm toán Chất lượng Gán nhãn CVAT (QA Audit Engine)</div>', unsafe_allow_html=True)
+        # PHẦN 2: BẢNG XẾP HẠNG ĐỘ KHÓ BOX TRỰC TIẾP TRONG CVAT
+        st.markdown('<div class="section-title">🏆 2. Hệ thống Xếp hạng Độ khó Box Trực tiếp trong CVAT (CVAT Box Difficulty Ranking)</div>', unsafe_allow_html=True)
+        st.markdown(r"""
+        <div class="box-blue">
+          <b>Cơ chế Xếp hạng Độ khó Tích hợp Thẳng vào CVAT:</b><br>
+          Để Annotator và Quản lý Dự án (QA/QC) có thể sắp xếp và ưu tiên xử lý các ca khó nhất trong hàng nghìn khung hình,
+          hệ thống M45 tính toán điểm định lượng và <b>gán trực tiếp thứ hạng từ #01 (Khó nhất) đến #N (Dễ nhất)</b> vào từng thuộc tính đối tượng trong CVAT:
+          <ul style="margin-top: 6px; margin-bottom: 0;">
+            <li><code>difficulty_rank</code>: Thứ tự xếp hạng cố định (<code>#01</code>, <code>#02</code>, <code>#03</code>... có đệm số 0 để lọc và sắp xếp chuẩn).</li>
+            <li><code>rank_badge</code>: Huy chương trực quan (🥇 <b>Top 1–3</b>, 🥈 <b>Top 4–10</b>, 🥉 <b>Top 11–20</b>).</li>
+            <li><code>cvat_color</code>: Mã màu tự động đổi màu viền hộp trong CVAT (🔴 Đỏ cho Cực khó, 🟡 Vàng cho Trung bình, 🟢 Xanh cho Dễ).</li>
+            <li><code>cvat_m45_ranking_plugin.user.js</code>: Tiện ích nhúng thẳng thanh điều khiển nổi (Floating HUD) vào trình duyệt của CVAT kèm phím tắt <b>Alt + H</b> (Nhảy ngay tới Box Khó tiếp theo).</li>
+          </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+        ranked_boxes_dataset = compute_dataset_box_ranks(df_annotator, sort_by_rank=True)
+        df_ranked = pd.DataFrame(ranked_boxes_dataset)
+
+        rk_f1, rk_f2 = st.columns([1.5, 1.0])
+        with rk_f1:
+            rank_filter_choice = st.radio(
+                "Bộ lọc Xếp hạng:",
+                options=[
+                    f"Tất cả ({len(df_ranked)} ca)",
+                    "🥇 Top 10 Ca Khó nhất (Critical Review)",
+                    "🔴 Hạng [RANK 1] & [RANK 2] (High Risk: Score ≥ 3.6)",
+                ],
+                horizontal=True,
+                key="rk_filter_choice",
+            )
+        with rk_f2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            search_case_id = st.text_input("🔍 Tìm theo Case ID:", placeholder="VD: c001, c003...", key="rk_search_case")
+
+        if "Top 10" in rank_filter_choice:
+            df_ranked_view = df_ranked.iloc[:10]
+        elif "High Risk" in rank_filter_choice:
+            df_ranked_view = df_ranked[df_ranked["difficulty_score"] >= 3.6]
+        else:
+            df_ranked_view = df_ranked
+
+        if search_case_id:
+            df_ranked_view = df_ranked_view[df_ranked_view["case_id"].str.contains(search_case_id, case=False, na=False)]
+
+        disp_rank_cols = [
+            "rank_medal", "case_id", "class_name", "difficulty_score",
+            "rank_tier", "N", "distance_m", "rank_percentile", "annotator_sop"
+        ]
+        disp_rank_rename = {
+            "rank_medal": "Thứ hạng",
+            "case_id": "Mã Ca",
+            "class_name": "Lớp Đối tượng",
+            "difficulty_score": "Điểm (1-5)",
+            "rank_tier": "Cấp độ Rank",
+            "N": "Điểm N",
+            "distance_m": "Cự ly (m)",
+            "rank_percentile": "Phân vị",
+            "annotator_sop": "SOP Thao tác Chuẩn",
+        }
+        st.dataframe(df_ranked_view[disp_rank_cols].rename(columns=disp_rank_rename), use_container_width=True)
+
+        # 3 Nút Tải dữ liệu Xếp hạng trực tiếp vào CVAT
+        rk_down1, rk_down2, rk_down3 = st.columns(3)
+        with rk_down1:
+            st.markdown("**Bảng Xếp hạng CSV:**")
+            rk_csv_data = df_ranked[disp_rank_cols].to_csv(index=False).encode("utf-8")
+            st.download_button(
+                "🏆 Tải Bảng Xếp hạng (ranking_leaderboard.csv)",
+                rk_csv_data,
+                "ranking_leaderboard.csv",
+                "text/csv",
+                key="btn_down_rk_csv",
+            )
+
+        with rk_down2:
+            st.markdown("**File XML CVAT Đã Xếp Hạng (#01 -> #N):**")
+            ranked_xml_content = export_cvat_3d_xml(ranked_boxes_dataset, task_name="M45_Ranked_CVAT_Task", apply_ranking=False).encode("utf-8")
+            st.download_button(
+                "📄 Tải annotations_ranked.xml",
+                ranked_xml_content,
+                "annotations_ranked.xml",
+                "application/xml",
+                key="btn_down_ranked_xml",
+            )
+
+        with rk_down3:
+            st.markdown("**Plugin Nhúng Thẳng Giao diện CVAT 3D:**")
+            plugin_path = REPO_ROOT / "cvat_plugin" / "cvat_m45_ranking_plugin.user.js"
+            if plugin_path.exists():
+                with open(plugin_path, "r", encoding="utf-8") as f:
+                    plugin_js_content = f.read().encode("utf-8")
+            else:
+                plugin_js_content = b"// M45 CVAT Plugin"
+            st.download_button(
+                "🧩 Tải cvat_m45_ranking_plugin.user.js",
+                plugin_js_content,
+                "cvat_m45_ranking_plugin.user.js",
+                "application/javascript",
+                key="btn_down_plugin_user_js",
+            )
+
+        with st.expander("⚡ Hướng dẫn Nhúng Plugin Xếp hạng trực tiếp vào Giao diện CVAT (Chạy trong 10 giây)", expanded=False):
+            st.markdown(r"""
+            1. **Cách nhanh nhất (Chạy ngay không cần cài đặt):**
+               - Mở trang CVAT trên trình duyệt (Chrome, Edge, Firefox).
+               - Bấm phím **F12** để mở cửa sổ Developer Tools -> Chọn tab **Console**.
+               - Copy toàn bộ nội dung file `cvat_m45_ranking_plugin.user.js` dán vào Console rồi bấm **Enter**.
+               - Bảng điều khiển nổi **🎯 M45 BOX RANKER** sẽ hiện ngay ở góc trên màn hình CVAT!
+            2. **Cách tự động hóa lâu dài (Tampermonkey):**
+               - Cài tiện ích [Tampermonkey](https://www.tampermonkey.net/) trên Chrome/Edge.
+               - Tạo script mới và dán file `cvat_m45_ranking_plugin.user.js` vào.
+               - Khi mở bất kỳ Task 3D nào trên CVAT, bảng xếp hạng sẽ tự động quét và phân loại toàn bộ bounding boxes!
+            3. **Phím tắt:** Nhấn **Alt + H** trên bàn phím để CVAT tự động phóng to và căn chỉnh vào Box Khó tiếp theo.
+            """)
+
+        st.markdown("---")
+
+        # PHẦN 3: KIỂM TOÁN CHẤT LƯỢNG ANNOTATION TỪ CVAT
+        st.markdown('<div class="section-title">📥 3. Kiểm toán Chất lượng Gán nhãn CVAT (QA Audit Engine)</div>', unsafe_allow_html=True)
         st.markdown(r"""
         Sau khi Annotator hoàn thành việc dán nhãn hoặc hiệu chỉnh trên CVAT, tải tệp export (`.xml` hoặc `.json`) về và nạp vào đây để hệ thống tự động:
         - So sánh sai số hình học 3D ($\Delta\text{Center}$, $\Delta\text{Yaw}$, $\Delta\text{Size}$, $\text{IoU 3D}$).
@@ -1823,8 +1942,8 @@ def main():
 
         st.markdown("---")
 
-        # PHẦN 3: KẾT NỐI VÀ ĐỒNG BỘ TRỰC TIẾP QUA CVAT REST API
-        st.markdown('<div class="section-title">⚡ 3. Đồng bộ Trực tiếp qua CVAT REST API (Network Sync)</div>', unsafe_allow_html=True)
+        # PHẦN 4: KẾT NỐI VÀ ĐỒNG BỘ TRỰC TIẾP QUA CVAT REST API
+        st.markdown('<div class="section-title">⚡ 4. Đồng bộ Trực tiếp qua CVAT REST API (Network Sync)</div>', unsafe_allow_html=True)
         st.markdown("""
         Tự động hóa hoàn toàn luồng gán nhãn: Tạo task, đẩy point cloud và tiêm pre-labels thẳng vào máy chủ CVAT qua REST API.
         """)
@@ -1863,8 +1982,8 @@ def main():
 
         st.markdown("---")
 
-        # PHẦN 4: NUCLIO SERVERLESS AI TOOL
-        st.markdown('<div class="section-title">🤖 4. Tích hợp Công cụ AI vào CVAT qua Nuclio Serverless (Magic Wand)</div>', unsafe_allow_html=True)
+        # PHẦN 5: NUCLIO SERVERLESS AI TOOL
+        st.markdown('<div class="section-title">🤖 5. Tích hợp Công cụ AI vào CVAT qua Nuclio Serverless (Magic Wand)</div>', unsafe_allow_html=True)
         st.markdown("""
         CVAT sử dụng cơ chế **Nuclio Serverless** để cung cấp công cụ AI tương tác (AI Magic Wand) trực tiếp trên trình duyệt.
         Nhóm M45 đã đóng gói sẵn mô-đun AI Screener để triển khai chỉ với **1 lệnh duy nhất**.
