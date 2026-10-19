@@ -1,0 +1,45 @@
+metadata:
+  name: m45-lidar-box-difficulty-screener
+  namespace: cvat
+  annotations:
+    name: M45 3D LiDAR Difficulty & Pre-label Screener
+    type: detector
+    framework: custom
+    spec: |
+      [
+        {
+          "id": 0,
+          "name": "vehicle.car",
+          "type": "cuboid",
+          "attributes": [
+            { "id": 0, "name": "difficulty_tier", "type": "select", "values": ["EASY", "MEDIUM", "HARD"] },
+            { "id": 1, "name": "difficulty_score", "type": "number", "values": ["1.0", "5.0", "0.1"] },
+            { "id": 2, "name": "risk_flags", "type": "text", "values": [] },
+            { "id": 3, "name": "annotator_sop", "type": "text", "values": [] }
+          ]
+        },
+        {
+          "id": 1,
+          "name": "human.pedestrian.adult",
+          "type": "cuboid",
+          "attributes": [
+            { "id": 0, "name": "difficulty_tier", "type": "select", "values": ["EASY", "MEDIUM", "HARD"] },
+            { "id": 1, "name": "difficulty_score", "type": "number", "values": ["1.0", "5.0", "0.1"] },
+            { "id": 2, "name": "risk_flags", "type": "text", "values": [] },
+            { "id": 3, "name": "annotator_sop", "type": "text", "values": [] }
+          ]
+        }
+      ]
+
+spec:
+  description: M45 Universal 3D LiDAR Point Density & Annotation Difficulty Screener for CVAT
+  runtime: python:3.9
+  handler: main:handler
+  eventTimeout: 30s
+  build:
+    image: cvat.m45.screener:latest
+    baseImage: python:3.9-slim
+    directives:
+      preCopy:
+        - kind: RUN
+          value: pip install --no-cache-dir numpy scipy
