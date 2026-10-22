@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VLearn Master — Ôn Thi K04-L23-P1-T0 | VinUni AI Thực Chiến</title>
+  <meta name="description" content="Nền tảng ôn thi toàn diện 14 Day cho khóa K04-L23-P1-T0 VinUni AI Thực Chiến: Lý thuyết trọng tâm, Ngân hàng đề thi thử, Flashcard và Cheat Sheet.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand-container">
+        <div class="brand-logo">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div class="brand-text">
+          <h2>VLearn<span>.Master</span></h2>
+          <span class="badge-course">K04-L23-P1-T0</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="overview" id="nav-overview">
+          <i class="fa-solid fa-compass"></i>
+          <span>Tổng quan khóa học</span>
+        </button>
+        <button class="nav-item" data-tab="theory" id="nav-theory">
+          <i class="fa-solid fa-book-open-reader"></i>
+          <span>Lý thuyết 14 Day</span>
+          <span class="nav-counter" id="theory-progress-badge">0/14</span>
+        </button>
+        <button class="nav-item" data-tab="exam" id="nav-exam">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Thi thử trắc nghiệm</span>
+          <span class="badge-hot">Đề thi</span>
+        </button>
+        <button class="nav-item" data-tab="flashcards" id="nav-flashcards">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>Flashcards ôn nhanh</span>
+        </button>
+        <button class="nav-item" data-tab="cheatsheet" id="nav-cheatsheet">
+          <i class="fa-solid fa-bolt"></i>
+          <span>Cheat Sheet & Công thức</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-user-card">
+        <div class="user-avatar">
+          <i class="fa-solid fa-user-graduate"></i>
+        </div>
+        <div class="user-meta">
+          <div class="user-name">26ai.hungnk</div>
+          <div class="user-role">VinUni AI Thực Chiến</div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="study-stats">
+          <div class="stat-item">
+            <span class="stat-val" id="stat-completed-days">0</span>
+            <span class="stat-lbl">Day đã học</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" id="stat-exam-high-score">0%</span>
+            <span class="stat-lbl">Điểm cao nhất</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-viewport">
+      <!-- Top App Bar -->
+      <header class="app-header">
+        <div class="header-left">
+          <h1 id="page-title" class="page-title">Tổng quan khóa học</h1>
+          <p id="page-subtitle" class="page-subtitle">Khóa 4 Phase 1 · Khung chương trình chuẩn bị kiểm tra</p>
+        </div>
+        <div class="header-actions">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="global-search" placeholder="Tìm kiếm kiến thức, thuật ngữ, công thức...">
+          </div>
+          <button class="btn-theme-toggle" id="theme-toggle" title="Đổi giao diện">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <a href="https://vlearn.dev/course/l2-l3-k4p1" target="_blank" class="btn-vlearn-link" title="Mở trang VLearn gốc">
+            <span>Mở VLearn</span>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </a>
+        </div>
+      </header>
+
+      <!-- View Containers -->
+      <div class="content-body">
+        
+        <!-- SECTION 1: OVERVIEW -->
+        <section id="view-overview" class="view-section active">
+          <div class="hero-banner">
+            <div class="hero-badge"><i class="fa-solid fa-sparkles"></i> Trung tâm ôn tập thích ứng</div>
+            <h2>Làm chủ kiến thức 14 Day cho kỳ kiểm tra sắp tới</h2>
+            <p>Hệ thống ôn luyện được bóc tách trực tiếp từ cấu trúc 14 bài học <strong>K04-L23-P1-T0</strong> trên nền tảng VLearn. Tập trung vào các mảng trọng tâm: Data Annotation, Object Detection, Tracking, Segmentation, Autonomous Driving (LiDAR, Point Cloud, OMS/DMS, BEV).</p>
+            
+            <div class="hero-cta-group">
+              <button class="btn btn-primary" onclick="switchTab('exam')">
+                <i class="fa-solid fa-play"></i> Làm bài thi thử ngay
+              </button>
+              <button class="btn btn-secondary" onclick="switchTab('theory')">
+                <i class="fa-solid fa-book"></i> Ôn bài theo từng Day
+              </button>
+              <button class="btn btn-outline" onclick="switchTab('flashcards')">
+                <i class="fa-solid fa-layer-group"></i> Luyện Flashcards
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Stats Cards -->
+          <div class="dashboard-grid">
+            <div class="metric-card">
+              <div class="metric-icon icon-cyan"><i class="fa-solid fa-calendar-days"></i></div>
+              <div class="metric-info">
+                <h3>14 Day</h3>
+                <p>Toàn bộ lộ trình Phase 1</p>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon icon-emerald"><i class="fa-solid fa-circle-question"></i></div>
+              <div class="metric-info">
+                <h3 id="total-questions-count">60+</h3>
+                <p>Câu hỏi trắc nghiệm thi thử</p>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon icon-purple"><i class="fa-solid fa-clone"></i></div>
+              <div class="metric-info">
+                <h3 id="total-cards-count">36</h3>
+                <p>Flashcards thuật ngữ & công thức</p>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon icon-amber"><i class="fa-solid fa-award"></i></div>
+              <div class="metric-info">
+                <h3 id="readiness-score">Chưa thi</h3>
+                <p>Mức độ sẵn sàng làm bài</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 14 Day Roadmap Grid -->
+          <div class="section-block">
+            <div class="section-header">
+              <div>
+                <h2>Lộ trình 14 Day chi tiết</h2>
+                <p>Nhấp vào bất kỳ Day nào để mở ngay nội dung tóm tắt lý thuyết và bài tập</p>
+              </div>
+            </div>
+            <div class="day-cards-grid" id="overview-day-cards">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: THEORY (14 DAYS) -->
+        <section id="view-theory" class="view-section">
+          <div class="theory-layout">
+            <!-- Day Selector Pills -->
+            <div class="day-selector-bar" id="day-selector-bar">
+              <!-- Dynamically populated buttons -->
+            </div>
+
+            <!-- Active Day Content Card -->
+            <div class="theory-main-card" id="theory-content-container">
+              <!-- Dynamically rendered -->
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 3: EXAM SIMULATOR -->
+        <section id="view-exam" class="view-section">
+          <!-- Setup Screen -->
+          <div class="exam-setup-card" id="exam-setup-card">
+            <div class="setup-header">
+              <div class="setup-icon"><i class="fa-solid fa-stopwatch-20"></i></div>
+              <h2>Chế độ Thi thử trắc nghiệm VLearn</h2>
+              <p>Mô phỏng bài kiểm tra thật với câu hỏi đa lựa chọn, bấm giờ và phân tích chi tiết kết quả.</p>
+            </div>
+
+            <div class="exam-options-grid">
+              <div class="option-group">
+                <label for="exam-day-filter"><i class="fa-solid fa-filter"></i> Phạm vi ôn thi:</label>
+                <select id="exam-day-filter" class="form-select">
+                  <option value="all">Tất cả 14 Day (Đề tổng hợp toàn diện)</option>
+                  <option value="part1">Day 1 - 5: Data, 2D Detection, Tracking, Pose, Segmentation</option>
+                  <option value="part2">Day 6 - 9: Quality Control, Governance, Active Learning, Road Elements</option>
+                  <option value="part3">Day 10 - 14: Autonomous Driving, OMS/DMS, SVM, 3D LiDAR, Robotaxi</option>
+                </select>
+              </div>
+
+              <div class="option-group">
+                <label for="exam-question-count"><i class="fa-solid fa-list-ol"></i> Số lượng câu hỏi:</label>
+                <select id="exam-question-count" class="form-select">
+                  <option value="15">15 câu (Ôn nhanh 15 phút)</option>
+                  <option value="30" selected>30 câu (Đề thi chuẩn 30 phút)</option>
+                  <option value="all">Tất cả câu hỏi trong ngân hàng</option>
+                </select>
+              </div>
+
+              <div class="option-group">
+                <label for="exam-timer-mode"><i class="fa-regular fa-clock"></i> Chế độ thời gian:</label>
+                <select id="exam-timer-mode" class="form-select">
+                  <option value="timed" selected>Tính giờ (Áp lực phòng thi thật)</option>
+                  <option value="untimed">Không giới hạn (Học tập tự do)</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-lg" id="btn-start-exam">
+              <i class="fa-solid fa-rocket"></i> Bắt đầu làm bài thi
+            </button>
+          </div>
+
+          <!-- Active Exam Screen -->
+          <div class="exam-active-card hidden" id="exam-active-card">
+            <div class="exam-status-bar">
+              <div class="exam-progress-info">
+                <span>Câu <strong id="current-q-num">1</strong> / <span id="total-q-num">30</span></span>
+                <div class="progress-bar-track">
+                  <div class="progress-bar-fill" id="exam-progress-bar"></div>
+                </div>
+              </div>
+
+              <div class="exam-timer" id="exam-timer-display">
+                <i class="fa-regular fa-clock"></i>
+                <span id="exam-time-remaining">30:00</span>
+              </div>
+
+              <button class="btn btn-danger btn-sm" id="btn-submit-exam">
+                <i class="fa-solid fa-flag-checkered"></i> Nộp bài
+              </button>
+            </div>
+
+            <div class="exam-question-container" id="exam-question-box">
+              <!-- Dynamically populated question -->
+            </div>
+
+            <div class="exam-nav-controls">
+              <button class="btn btn-secondary" id="btn-prev-q">
+                <i class="fa-solid fa-chevron-left"></i> Câu trước
+              </button>
+              <div class="question-number-pills" id="q-pills-container">
+                <!-- Question number jump pills -->
+              </div>
+              <button class="btn btn-primary" id="btn-next-q">
+                Câu tiếp theo <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Exam Result Screen -->
+          <div class="exam-result-card hidden" id="exam-result-card">
+            <!-- Dynamically populated results -->
+          </div>
+        </section>
+
+        <!-- SECTION 4: FLASHCARDS -->
+        <section id="view-flashcards" class="view-section">
+          <div class="flashcards-container">
+            <div class="flashcard-toolbar">
+              <div class="fc-filter">
+                <label for="fc-day-select"><i class="fa-solid fa-filter"></i> Lọc theo Day:</label>
+                <select id="fc-day-select" class="form-select">
+                  <option value="all">Tất cả chủ đề</option>
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+              <div class="fc-stats">
+                <span>Đã ghi nhớ: <strong id="fc-mastered-count" class="text-emerald">0</strong></span>
+                <span>Cần ôn: <strong id="fc-learning-count" class="text-amber">0</strong></span>
+                <span>Thẻ hiện tại: <span id="fc-current-index">1</span>/<span id="fc-total-count">0</span></span>
+              </div>
+            </div>
+
+            <div class="flashcard-viewport">
+              <div class="flashcard" id="active-flashcard">
+                <div class="flashcard-inner">
+                  <div class="flashcard-front">
+                    <span class="fc-day-badge" id="fc-badge">Day 1</span>
+                    <h3 id="fc-term">IoU (Intersection over Union)</h3>
+                    <p class="fc-hint">Nhấp chuột hoặc phím Space để lật thẻ xem giải nghĩa</p>
+                  </div>
+                  <div class="flashcard-back">
+                    <span class="fc-day-badge">Đáp án & Giải thích</span>
+                    <div class="fc-definition" id="fc-def">
+                      Diện tích phần giao nhau chia cho diện tích phần hợp nhất của hai bounding box. Thường dùng ngưỡng 0.5 để xác định True Positive.
+                    </div>
+                    <div class="fc-formula" id="fc-formula">
+                      <code>IoU = Area(A ∩ B) / Area(A ∪ B)</code>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flashcard-actions">
+              <button class="btn btn-secondary btn-icon" id="fc-prev-btn" title="Thẻ trước">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+              <button class="btn btn-warning" id="fc-mark-review-btn">
+                <i class="fa-solid fa-rotate-left"></i> Cần ôn lại
+              </button>
+              <button class="btn btn-success" id="fc-mark-mastered-btn">
+                <i class="fa-solid fa-check"></i> Đã nhớ vững
+              </button>
+              <button class="btn btn-secondary btn-icon" id="fc-next-btn" title="Thẻ kế tiếp">
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5: CHEAT SHEET -->
+        <section id="view-cheatsheet" class="view-section">
+          <div class="cheatsheet-grid">
+            <div class="cheat-card">
+              <div class="cheat-header">
+                <i class="fa-solid fa-calculator"></i>
+                <h3>1. Các chỉ số đo lường (Metrics)</h3>
+              </div>
+              <div class="cheat-content">
+                <div class="cheat-row">
+                  <span class="cheat-title">IoU (Intersection over Union):</span>
+                  <code>IoU = Area(A ∩ B) / Area(A ∪ B)</code>
+                  <p class="cheat-desc">Ngưỡng chuẩn: IoU ≥ 0.5 (TP), IoU &lt; 0.5 (FP).</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">Precision (Độ chính xác):</span>
+                  <code>Precision = TP / (TP + FP)</code>
+                  <p class="cheat-desc">Trong số những gì mô hình đoán là Dương, có bao nhiêu cái đúng thật.</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">Recall (Độ phủ):</span>
+                  <code>Recall = TP / (TP + FN)</code>
+                  <p class="cheat-desc">Trong số tất cả các mẫu Dương thực tế, mô hình tìm ra được bao nhiêu.</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">mAP (mean Average Precision):</span>
+                  <code>mAP = (1/N) * ∑ AP_i</code>
+                  <p class="cheat-desc">Tính diện tích dưới đường cong PR (Precision-Recall curve) theo các ngưỡng IoU (AP50, AP75, AP[50:95]).</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">OKS (Object Keypoint Similarity):</span>
+                  <code>OKS = ∑ exp(-d_i² / (2s²k_i²)) * v_i / ∑ v_i</code>
+                  <p class="cheat-desc">Đo độ sai lệch của từng khớp xương so với ground-truth theo tỉ lệ cơ thể.</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">Dice Score / F1 cho Segmentation:</span>
+                  <code>Dice = 2 * |A ∩ B| / (|A| + |B|)</code>
+                  <p class="cheat-desc">Tương quan với IoU: <code>Dice = 2*IoU / (1 + IoU)</code>.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="cheat-card">
+              <div class="cheat-header">
+                <i class="fa-solid fa-shapes"></i>
+                <h3>2. Định dạng nhãn 2D (Annotation Formats)</h3>
+              </div>
+              <div class="cheat-content">
+                <div class="cheat-row">
+                  <span class="cheat-title">COCO Format:</span>
+                  <code>[x_min, y_min, width, height]</code>
+                  <p class="cheat-desc">Tọa độ tuyệt đối tính theo pixel góc trên bên trái, kèm chiều rộng và chiều cao.</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">PASCAL VOC Format:</span>
+                  <code>[x_min, y_min, x_max, y_max]</code>
+                  <p class="cheat-desc">Tọa độ góc trên bên trái và góc dưới bên phải.</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">YOLO Format (Normalized):</span>
+                  <code>[class_id, x_center, y_center, width, height]</code>
+                  <p class="cheat-desc">Giá trị chuẩn hóa từ 0.0 đến 1.0 chia theo chiều rộng và chiều cao ảnh gốc.</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">RLE (Run-Length Encoding):</span>
+                  <code>Counts: [start1, len1, start2, len2,...]</code>
+                  <p class="cheat-desc">Nén mask nhị phân cho segmentation cực kỳ nhỏ gọn so với lưu ma trận ảnh.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="cheat-card">
+              <div class="cheat-header">
+                <i class="fa-solid fa-cube"></i>
+                <h3>3. 3D LiDAR & Point Cloud (NuScenes / Robotaxi)</h3>
+              </div>
+              <div class="cheat-content">
+                <div class="cheat-row">
+                  <span class="cheat-title">3D Bounding Box (7 / 9 DoF):</span>
+                  <code>[x, y, z, dx, dy, dz, yaw] (+ pitch, roll)</code>
+                  <p class="cheat-desc">Tọa độ tâm (x,y,z), kích thước bao (dài, rộng, cao) và góc hướng (yaw).</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">Hệ trục tọa độ xe (Ego Frame):</span>
+                  <code>X: Bên phải (hoặc tiến tới) | Y: Tiến tới | Z: Hướng lên trời</code>
+                  <p class="cheat-desc">NuScenes dùng chuẩn: X = Right, Y = Forward, Z = Up.</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">Sensor Calibration (Hiệu chỉnh cảm biến):</span>
+                  <code>P_cam = K * [R | T] * P_lidar</code>
+                  <p class="cheat-desc">Ma trận nội suy (Intrinsic K) và ngoại suy (Extrinsic R, T) để chiếu đám mây điểm 3D lên ảnh 2D.</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">Đo độ khó gán nhãn 3D (Difficulty Index):</span>
+                  <code>Thưa điểm (Sparseness), Bị che khuất (Occlusion), Kích thước nhỏ (Truncation)</code>
+                  <p class="cheat-desc">Đối tượng càng xa (&gt;50m) số điểm tia LiDAR phản hồi càng ít, khó xác định góc xoay (heading).</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="cheat-card">
+              <div class="cheat-header">
+                <i class="fa-solid fa-car"></i>
+                <h3>4. Autonomous Driving & In-Cabin (OMS/DMS)</h3>
+              </div>
+              <div class="cheat-content">
+                <div class="cheat-row">
+                  <span class="cheat-title">DMS (Driver Monitoring System):</span>
+                  <code>Gaze vector (Hướng nhìn), PERCLOS (Tỉ lệ nhắm mắt), Yawning (Ngáp), Phone usage</code>
+                  <p class="cheat-desc">Phát hiện mất tập trung (Distraction) và buồn ngủ (Drowsiness) của tài xế.</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">OMS (Occupant Monitoring System):</span>
+                  <code>Seatbelt state (Dây an toàn), Child presence (Trẻ em bị bỏ quên), Passenger posture</code>
+                  <p class="cheat-desc">Tối ưu bung túi khí thông minh và an toàn hành khách trong khoang xe.</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">SVM-360 (Surround View Monitoring):</span>
+                  <code>4 camera mắt cá (Fisheye: Trước, Sau, Trái, Phải) -> Khử méo -> Chiếu BEV -> Stitching</code>
+                  <p class="cheat-desc">Tạo góc nhìn từ trên cao xuống (Bird's Eye View) hỗ trợ đỗ xe an toàn.</p>
+                </div>
+                <div class="cheat-row">
+                  <span class="cheat-title">Road Elements:</span>
+                  <code>Lane divider (vạch liền/đứt), Zebra cross, Curbs (vỉa hè), Drivable area (vùng xe chạy được)</code>
+                  <p class="cheat-desc">Phân định rõ ranh giới làn đường và các biển báo tín hiệu điều khiển.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
